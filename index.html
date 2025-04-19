@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>专属随机图片</title>
+    <title>自动刷新随机图</title>
     <style>
         body {
             margin: 0;
@@ -45,21 +45,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .refresh-btn {
-            margin-top: 20px;
-            padding: 10px 25px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .refresh-btn:hover {
-            background: #2980b9;
-        }
     </style>
 </head>
 <body>
@@ -67,10 +52,9 @@
     <div class="image-container">
         <img id="randomImage" alt="随机图片">
     </div>
-    <button class="refresh-btn" onclick="loadRandomImage()">换一张</button>
 
     <script>
-        // 专属图片链接列表
+        // 专属图片库
         const imageUrls = [
             'https://tc.cecily.eu.org/file/api/3fiEaoqJ.jpg',
             'https://tc.cecily.eu.org/file/api/LXgNeotJ.jpg',
@@ -131,16 +115,10 @@
             }
         }
 
-        // 初始加载 + 键盘控制
+        // 仅保留页面加载自动刷新
         window.onload = loadRandomImage;
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                loadRandomImage();
-                e.preventDefault();
-            }
-        });
 
-        // 自适应调整
+        // 自动调整图片尺寸
         window.addEventListener('resize', () => {
             const img = document.getElementById('randomImage');
             if (img.complete) {
