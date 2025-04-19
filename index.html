@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>原始尺寸随机图片</title>
+    <style>
+        /* === 修改1：移除尺寸限制 === */
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #1a1a1a;
+            /* 添加滚动条支持 */
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* === 修改2：取消最大尺寸限制 === */
+        img {
+            width: auto;
+            height: auto;
+            max-width: none;
+            max-height: none;
+            box-shadow: 0 0 30px rgba(0,0,0,0.4);
+            margin: 20px 0;
+        }
+
+        /* === 新增：响应式容器 === */
+        .image-container {
+            display: inline-block;
+            position: relative;
+            text-align: center;
+        }
+
+        /* === 保持其他样式 === */
+        .loader { /* ...原有加载动画样式... */ }
+        .refresh-btn { /* ...原有按钮样式... */ }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <div class="image-container">
+        <img id="randomImage" alt="随机图片">
+    </div>
+    <button class="refresh-btn" onclick="loadRandomImage()">换一张</button>
+
+    <script>
+        // ===== 修改3：移除尺寸参数 ====
+        const imageProviders = [
+            // 使用无尺寸参数的URL
+            'https://picsum.photos/seed/' + Math.random(),
+            'https://source.unsplash.com/random',
+            'https://random.imagecdn.app',
+            'https://picsum.photos/2000',  // 示例大尺寸图片
+            'https://placekitten.com/'     // 随机猫图
+        ];
+
+        // ===== 新增：自适应处理 ====
+        function handleImageSize(img) {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // 如果图片宽度超过视口，保持比例缩放
+            if (img.naturalWidth > viewportWidth) {
+                img.style.width = `${viewportWidth - 40}px`; // 留出边距
+                img.style.height = 'auto';
+            }
+        }
+
+        async function loadRandomImage() {
+            // ...原有加载逻辑...
+            
+            imgElement.onload = function() {
+                handleImageSize(this); // 调用尺寸处理
+                // ...其他逻辑...
+            }
+            
+            // ...错误处理...
+        }
+
+        // ===== 新增：窗口大小监听 ====
+        window.addEventListener('resize', () => {
+            const img = document.getElementById('randomImage');
+            if (img.complete) {
+                handleImageSize(img);
+            }
+        });
+    </script>
+</body>
+</html>
