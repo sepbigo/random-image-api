@@ -2,9 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>原始尺寸随机图片</title>
+    <title>专属随机图片</title>
     <style>
-        /* === 修改1：移除尺寸限制 === */
         body {
             margin: 0;
             min-height: 100vh;
@@ -12,31 +11,55 @@
             flex-direction: column;
             align-items: center;
             background: #1a1a1a;
-            /* 添加滚动条支持 */
             overflow-x: hidden;
             overflow-y: auto;
         }
 
-        /* === 修改2：取消最大尺寸限制 === */
-        img {
-            width: auto;
-            height: auto;
-            max-width: none;
-            max-height: none;
-            box-shadow: 0 0 30px rgba(0,0,0,0.4);
-            margin: 20px 0;
-        }
-
-        /* === 新增：响应式容器 === */
         .image-container {
             display: inline-block;
             position: relative;
             text-align: center;
         }
 
-        /* === 保持其他样式 === */
-        .loader { /* ...原有加载动画样式... */ }
-        .refresh-btn { /* ...原有按钮样式... */ }
+        img {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            box-shadow: 0 0 30px rgba(0,0,0,0.4);
+            margin: 20px 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1.5s linear infinite;
+            position: absolute;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .refresh-btn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #2980b9;
+        }
     </style>
 </head>
 <body>
@@ -47,58 +70,82 @@
     <button class="refresh-btn" onclick="loadRandomImage()">换一张</button>
 
     <script>
-        // ===== 修改3：移除尺寸参数 ====
-        const imageProviders = [
-            // 使用无尺寸参数的URL
-            'https://tc.cecily.eu.org/file/api/AikuZV4T.jpg' + Math.random(),
-            'https://tc.cecily.eu.org/file/api/Bk0Ty7RG.jpg',
-            'https://tc.cecily.eu.org/file/api/se55P1zX.jpg',
-            'https://tc.cecily.eu.org/file/api/mvZ612tm.jpg',
-            'https://tc.cecily.eu.org/file/api/AWFMlI8l.jpg',
-            'https://tc.cecily.eu.org/file/api/Pfyt9Iyn.jpg',
+        // 专属图片链接列表
+        const imageUrls = [
+            'https://tc.cecily.eu.org/file/api/3fiEaoqJ.jpg',
+            'https://tc.cecily.eu.org/file/api/LXgNeotJ.jpg',
+            'https://tc.cecily.eu.org/file/api/X6pi6Ss6.jpg',
+            'https://tc.cecily.eu.org/file/api/eob40NoY.jpg',
+            'https://tc.cecily.eu.org/file/api/9jSiZ1i6.jpg',
+            'https://tc.cecily.eu.org/file/api/SMj89ADB.jpg',
+            'https://tc.cecily.eu.org/file/api/lRgXm1AN.jpg',
+            'https://tc.cecily.eu.org/file/api/zspqjsUd.jpg',
+            'https://tc.cecily.eu.org/file/api/pWoivWm5.jpg',
+            'https://tc.cecily.eu.org/file/api/d1yesmpM.jpg',
             'https://tc.cecily.eu.org/file/api/0S1tHmY2.jpg',
             'https://tc.cecily.eu.org/file/api/RT8ct6hy.jpg',
-            'https://tc.cecily.eu.org/file/api/pWoivWm5.jpg',
             'https://tc.cecily.eu.org/file/api/OBnQSCWa.jpg',
-            'https://tc.cecily.eu.org/file/api/d1yesmpM.jpg',
-            'https://tc.cecily.eu.org/file/api/eob40NoY.jpg',
-            'https://tc.cecily.eu.org/file/api/LXgNeotJ.jpg',
-            'https://tc.cecily.eu.org/file/api/SMj89ADB.jpg',
-            'https://tc.cecily.eu.org/file/api/X6pi6Ss6.jpg',
-            'https://tc.cecily.eu.org/file/api/zspqjsUd.jpg',
-            'https://tc.cecily.eu.org/file/api/3fiEaoqJ.jpg',
-            'https://tc.cecily.eu.org/file/api/9CRXlnA0.jpg',  // 示例大尺寸图片
-            'https://tc.cecily.eu.org/file/api/Fvro4SnE.jpg'     // 随机猫图
+            'https://tc.cecily.eu.org/file/api/AWFMlI8l.jpg',
+            'https://tc.cecily.eu.org/file/api/AikuZV4T.jpg'
         ];
 
-        // ===== 新增：自适应处理 ====
-        function handleImageSize(img) {
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-            
-            // 如果图片宽度超过视口，保持比例缩放
-            if (img.naturalWidth > viewportWidth) {
-                img.style.width = `${viewportWidth - 40}px`; // 留出边距
-                img.style.height = 'auto';
-            }
-        }
+        // 配置参数
+        const config = {
+            fallbackImage: 'https://placehold.co/1200x800?text=图片加载失败',
+            timeout: 8000
+        };
 
         async function loadRandomImage() {
-            // ...原有加载逻辑...
+            const loader = document.querySelector('.loader');
+            const imgElement = document.getElementById('randomImage');
             
-            imgElement.onload = function() {
-                handleImageSize(this); // 调用尺寸处理
-                // ...其他逻辑...
+            try {
+                loader.style.display = 'block';
+                imgElement.style.opacity = 0;
+
+                const randomIndex = Math.floor(Math.random() * imageUrls.length);
+                const imageUrl = `${imageUrls[randomIndex]}?t=${Date.now()}`;
+
+                await new Promise((resolve, reject) => {
+                    const timer = setTimeout(() => reject('加载超时'), config.timeout);
+                    
+                    imgElement.onload = () => {
+                        clearTimeout(timer);
+                        resolve();
+                    };
+                    
+                    imgElement.onerror = () => {
+                        clearTimeout(timer);
+                        reject('加载失败');
+                    };
+                    
+                    imgElement.src = imageUrl;
+                });
+
+            } catch (error) {
+                console.error(error);
+                imgElement.src = config.fallbackImage;
+            } finally {
+                loader.style.display = 'none';
+                imgElement.style.opacity = 1;
             }
-            
-            // ...错误处理...
         }
 
-        // ===== 新增：窗口大小监听 ====
+        // 初始加载 + 键盘控制
+        window.onload = loadRandomImage;
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                loadRandomImage();
+                e.preventDefault();
+            }
+        });
+
+        // 自适应调整
         window.addEventListener('resize', () => {
             const img = document.getElementById('randomImage');
             if (img.complete) {
-                handleImageSize(img);
+                img.style.width = Math.min(img.naturalWidth, window.innerWidth - 40) + 'px';
+                img.style.height = 'auto';
             }
         });
     </script>
